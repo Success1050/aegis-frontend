@@ -90,16 +90,43 @@ export function useCreateIncidentMutation() {
 
   return useMutation({
     mutationFn: async (payload: {
-      title: string;
+      title?: string;
       description: string;
-      incidentType: IncidentType;
+      type?: IncidentType;
+      incidentType?: IncidentType;
       severity: IncidentSeverity;
       latitude: number;
       longitude: number;
       zoneId?: string;
+      alertRadiusMeters?: number;
       blastRadiusMeters?: number;
+      acknowledgeDuplicates?: boolean;
+      idempotencyKey?: string;
     }) => {
-      return api.post<Incident>("/incidents", payload);
+      const { idempotencyKey, ...body } = payload;
+      const headers: Record<string, string> = {};
+      if (idempotencyKey) {
+        headers["Idempotency-Key"] = idempotencyKey;
+      }
+      const requestBody: Record<string, unknown> = {
+        type: body.type || body.incidentType,
+        severity: body.severity,
+        description: body.description,
+        latitude: body.latitude,
+        longitude: body.longitude,
+        alertRadiusMeters: body.alertRadiusMeters || body.blastRadiusMeters || 2000,
+        acknowledgeDuplicates: !!body.acknowledgeDuplicates,
+      };
+      if (
+        body.zoneId &&
+        typeof body.zoneId === "string" &&
+        body.zoneId.trim() !== "" &&
+        body.zoneId !== "manual" &&
+        body.zoneId !== "null"
+      ) {
+        requestBody.zoneId = body.zoneId.trim();
+      }
+      return api.post<Incident>("/incidents", requestBody, { headers });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: incidentKeys.all });
@@ -116,14 +143,31 @@ export function useVerifyIncidentMutation() {
   return useMutation({
     mutationFn: async ({
       incidentId,
+      confirmLargeBlast,
+      overrideSelfVerify,
       blastRadiusMeters,
+      idempotencyKey,
     }: {
       incidentId: string;
+      confirmLargeBlast?: boolean;
+      overrideSelfVerify?: boolean;
       blastRadiusMeters?: number;
+      idempotencyKey?: string;
     }) => {
-      return api.post<Incident>(`/incidents/${incidentId}/verify`, {
-        blastRadiusMeters,
-      });
+      const headers: Record<string, string> = {};
+      if (idempotencyKey) {
+        headers["Idempotency-Key"] = idempotencyKey;
+      }
+      const body: Record<string, unknown> = {};
+      if (confirmLargeBlast !== undefined) body.confirmLargeBlast = confirmLargeBlast;
+      if (overrideSelfVerify !== undefined) body.overrideSelfVerify = overrideSelfVerify;
+      if (blastRadiusMeters !== undefined) body.blastRadiusMeters = blastRadiusMeters;
+
+      return api.post<Incident>(
+        `/incidents/${incidentId}/verify`,
+        body,
+        { headers }
+      );
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: incidentKeys.detail(variables.incidentId) });
@@ -142,13 +186,17 @@ export function useDismissIncidentMutation() {
   return useMutation({
     mutationFn: async ({
       incidentId,
+      reason,
       dismissReason,
     }: {
       incidentId: string;
-      dismissReason: string;
+      reason?: string;
+      dismissReason?: string;
     }) => {
+      const finalReason = (reason || dismissReason || "").trim();
       return api.post<Incident>(`/incidents/${incidentId}/dismiss`, {
-        dismissReason,
+        reason: finalReason,
+        dismissReason: finalReason,
       });
     },
     onSuccess: (data, variables) => {
@@ -167,16 +215,20 @@ export function useResolveIncidentMutation() {
   return useMutation({
     mutationFn: async ({
       incidentId,
+      notes,
       resolveNotes,
       sendAllClear,
     }: {
       incidentId: string;
+      notes?: string;
       resolveNotes?: string;
       sendAllClear?: boolean;
     }) => {
+      const finalNotes = (notes || resolveNotes || "").trim();
       return api.post<Incident>(`/incidents/${incidentId}/resolve`, {
-        resolveNotes,
-        sendAllClear,
+        notes: finalNotes,
+        resolveNotes: finalNotes,
+        sendAllClear: !!sendAllClear,
       });
     },
     onSuccess: (data, variables) => {

@@ -56,17 +56,45 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         if (typeof window !== "undefined") {
+          const refreshToken = localStorage.getItem("aegis_refresh_token");
           localStorage.removeItem("aegis_access_token");
           localStorage.removeItem("aegis_refresh_token");
           localStorage.removeItem("aegis_user");
+          localStorage.removeItem("aegis_auth_store");
+
+          // Attempt backend logout in background to revoke cookies
+          try {
+            const apiUrl =
+              process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+            fetch(`${apiUrl}/auth/logout`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ refreshToken }),
+            }).catch(() => {});
+          } catch {
+            // Ignored
+          }
+
+          // Reset memory state and redirect cleanly
+          set({
+            user: null,
+            accessToken: null,
+            isAuthenticated: false,
+            sessionExpired: false,
+            isLoading: false,
+          });
+
+          window.location.href = "/login";
+        } else {
+          set({
+            user: null,
+            accessToken: null,
+            isAuthenticated: false,
+            sessionExpired: false,
+            isLoading: false,
+          });
         }
-        set({
-          user: null,
-          accessToken: null,
-          isAuthenticated: false,
-          sessionExpired: false,
-          isLoading: false,
-        });
       },
 
       isAdmin: () => get().user?.role === "ADMIN",

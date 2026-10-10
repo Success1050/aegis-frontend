@@ -11,7 +11,8 @@ import { FormattedWAT } from "@/components/ui/formatted-time";
 import { MaskedPhone } from "@/components/ui/masked-phone";
 import { useAuthStore } from "@/stores/auth-store";
 import { useIncidentStore } from "@/stores/incident-store";
-import { MapPin, ShieldCheck, ArrowRight, Eye, ShieldAlert, X } from "lucide-react";
+import { MapPin, ShieldCheck, ArrowRight, Eye, ShieldAlert, X, AlertTriangle } from "lucide-react";
+import { getThreatPresentation } from "@/lib/incident-threat";
 
 export function IncidentCard({
   incident,
@@ -30,6 +31,13 @@ export function IncidentCard({
   const isReporter = user?.id === incident.reportedById;
   const canVerify = isOfficerOrAdmin && (!isReporter || user?.role === "ADMIN");
 
+  const threat = getThreatPresentation(incident.type || incident.incidentType, incident.severity);
+  const timeVal = incident.createdAt || incident.reportedAt;
+  const numberVal = incident.number || incident.incidentNumber || "INC-RECORD";
+  const areaVal = incident.zoneName || incident.zone?.name || "Immediate Coordinates";
+  const radiusVal = incident.alertRadiusMeters || incident.blastRadiusMeters || 1000;
+  const displayTitle = incident.title || threat.headline;
+
   return (
     <Card
       className={cn(
@@ -43,22 +51,28 @@ export function IncidentCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
-              {incident.incidentNumber}
+              {numberVal}
             </span>
             <SeverityBadge severity={incident.severity} size="sm" />
             <StatusBadge status={incident.status} size="sm" />
+            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              {threat.categoryTag}
+            </span>
           </div>
 
-          <div className="text-xs text-slate-500 dark:text-slate-400" title={formatRelativeTime(incident.reportedAt)}>
-            <FormattedWAT date={incident.reportedAt} />
+          <div className="text-xs text-slate-500 dark:text-slate-400" title={formatRelativeTime(timeVal)}>
+            <FormattedWAT date={timeVal} />
           </div>
         </div>
 
         <Link
           href={`/incidents/${incident.id}`}
-          className="text-base font-bold text-slate-900 dark:text-slate-100 hover:underline mt-1 block"
+          className="text-base font-bold text-slate-900 dark:text-slate-100 hover:underline mt-1 flex items-center gap-2"
         >
-          {incident.title}
+          {incident.severity === "CRITICAL" && (
+            <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 animate-pulse" />
+          )}
+          <span>{displayTitle}</span>
         </Link>
       </CardHeader>
 
@@ -71,10 +85,10 @@ export function IncidentCard({
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>{incident.zone?.name || "Community Coordinates"}</span>
+              <span>{areaVal}</span>
             </span>
             <span>•</span>
-            <span>Radius: {incident.blastRadiusMeters}m</span>
+            <span>Radius: {radiusVal}m</span>
           </div>
 
           <div>

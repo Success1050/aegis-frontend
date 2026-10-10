@@ -288,3 +288,81 @@ export function RoleBadge({ role, className }: { role: UserRole; className?: str
       );
   }
 }
+
+/**
+ * Specialized Alert Delivery Status Badge
+ */
+export function AlertStatusBadge({
+  status,
+  className,
+}: {
+  status: AlertStatus;
+  className?: string;
+}) {
+  switch (status) {
+    case "DELIVERED":
+      return (
+        <Badge
+          size="sm"
+          className={cn(
+            "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300",
+            className
+          )}
+        >
+          <CheckCircle2 className="w-3 h-3 text-emerald-600 mr-1" />
+          Delivered
+        </Badge>
+      );
+    case "SENT":
+      return (
+        <Badge
+          size="sm"
+          className={cn(
+            "bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950/80 dark:text-blue-300",
+            className
+          )}
+        >
+          Sent
+        </Badge>
+      );
+    case "SENDING":
+      return (
+        <Badge
+          size="sm"
+          className={cn(
+            "bg-sky-100 text-sky-800 border border-sky-300 dark:bg-sky-950/80 dark:text-sky-300 animate-pulse",
+            className
+          )}
+        >
+          Sending...
+        </Badge>
+      );
+    case "QUEUED":
+      return (
+        <Badge
+          size="sm"
+          className={cn(
+            "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300",
+            className
+          )}
+        >
+          Queued
+        </Badge>
+      );
+    case "FAILED":
+      return (
+        <Badge
+          size="sm"
+          className={cn(
+            "bg-red-100 text-red-800 border border-red-300 dark:bg-red-950/80 dark:text-red-300",
+            className
+          )}
+        >
+          <XCircle className="w-3 h-3 text-red-600 mr-1" />
+          Failed
+        </Badge>
+      );
+    default:
+      return <Badge size="sm">{status}</Badge>;
+  }
+}

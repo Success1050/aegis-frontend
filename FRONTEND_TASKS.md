@@ -54,44 +54,44 @@
   - Date formatter: `formatWAT(date)` displaying WAT with UTC tooltip.
 
 ### Day 3: Role-Specific Dashboards & Real-Time Monitoring
-- [ ] **1. Security Command Center (`/dashboard`):**
+- [x] **1. Security Command Center (`/dashboard`):**
   - Operational metric cards: Pending Review (with age badge and pulse animation), Active Alerts, People at Risk, Resolved Today.
   - Real-time incident feed with audio-visual chime on new `PENDING_REVIEW` entries.
   - Quick-action buttons: Review, Verify Modal trigger, Dismiss Modal trigger.
   - 10-second polling / SSE with tab visibility auto-pause.
-- [ ] **2. System Administrator Dashboard (`/admin`):**
+- [x] **2. System Administrator Dashboard (`/admin`):**
   - Global overview: Total users by role and language, community zone counters, system delivery breakdown.
   - Infrastructure banner: Provider outages, carrier balance status, unreviewed templates warning badge.
   - Direct shortcuts to User Management, Zone Management, and Audit Logs.
-- [ ] **3. Resident Community Safety Portal (`/portal`):**
+- [x] **3. Resident Community Safety Portal (`/portal`):**
   - Home community status card ("Your Community is currently SECURE / ALERT ACTIVE").
   - Localized alert notice feed (showing area name, WAT time, severity — coordinates masked).
   - Safety alert notification preferences (toggle SMS on/off) and preferred language selector (Hausa, Pidgin, Yoruba, Igbo, English).
   - 10-second polling with visibility detection (`document.hidden` pause/resume).
   - Audio and visual chime cue when a new incident enters `PENDING_REVIEW` to alert officers on duty.
-- [ ] **System Status Banner:** Display alerts when queue is paused, provider encounters errors, or templates need native review.
+- [x] **System Status Banner:** Display alerts when queue is paused, provider encounters errors, or templates need native review.
 
 ### Day 4: Incident Reporting Workflow (`/incidents/new`)
-- [ ] **Report Form Creation:**
-  - Type selection (`POSSIBLE_INTRUSION`, `SUSPICIOUS_PERSON`, `SUSPICIOUS_VEHICLE`, `FIRE`, `OTHER`).
+- [x] **Report Form Creation:**
+  - Type selection (`BANDIT_ATTACK`, `TERRORIST_INCURSION`, `KIDNAPPING_THREAT`, `POSSIBLE_INTRUSION`, `SUSPICIOUS_PERSON`, `SUSPICIOUS_VEHICLE`, `FIRE`, `FLOOD_WARNING`, `SEVERE_WEATHER`, `OTHER`).
   - Severity radio group with visual indicators (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
   - Sanitized description input (10–1000 characters).
   - Optional radius override for Admins.
-- [ ] **Location Picker Component:**
+- [x] **Location Picker Component:**
   - Manual latitude/longitude coordinate input with range validation.
   - "Use Zone Center" shortcut dropdown.
-  - Leaflet + OpenStreetMap interactive marker picker with graceful fallback when map tiles are unreachable.
-- [ ] **Safety & Sanity Warning Dialogs:**
+  - Interactive OpenStreetMap marker picker with graceful fallback when map tiles are unreachable.
+- [x] **Safety & Sanity Warning Dialogs:**
   - Coordinates outside Nigeria bounding box soft-warning modal ("I confirm this location").
   - Swapped coordinate detection prompt.
-- [ ] **Duplicate Incident Guard:**
+- [x] **Duplicate Incident Guard:**
   - Fetch open incidents within 500m / 30m window and present duplicate warning modal with explicit acknowledgement checkbox.
-- [ ] **Submit Guarding:** Debounce submission, lock buttons, generate `Idempotency-Key`, and redirect to `/incidents/[id]` on success.
+- [x] **Submit Guarding:** Debounce submission, lock buttons, generate `Idempotency-Key`, and redirect to `/incidents/[id]` on success.
 
 ### Day 5: Incident Detail & Two-Officer Verification Modal (`/incidents/[id]`)
-- [ ] **Incident Detail View:**
+- [x] **Incident Detail View:**
   - Complete incident summary, map location marker, reporter details, and timeline of status changes.
-- [ ] **Two-Officer Verification Modal:**
+- [x] **Two-Officer Verification Modal:**
   - Fetch dry-run `GET /incidents/:id/preview-recipients`.
   - **Dual-Pillar Recipient Breakdown:**
     - Physically nearby count (detected via GPS within blast radius).
@@ -104,26 +104,26 @@
   - Multilingual message text inspection tabs.
   - Warning badges if any template has `NEEDS_NATIVE_REVIEW` status.
   - Confirmation button: "Confirm and Send Alerts" (disabled until preview successfully loads).
-- [ ] **Four-Eyes Policy Guard:**
+- [x] **Four-Eyes Policy Guard:**
   - Clear UX feedback when the reporter attempts to self-verify without Admin override permission.
-- [ ] **Dismissal Flow:**
+- [x] **Dismissal Flow:**
   - Modal with mandatory reason input (min 5, max 500 chars).
-- [ ] **Race Condition Resilience:**
+- [x] **Race Condition Resilience:**
   - Detect `409 Conflict` (if another officer acted concurrently), auto-refresh data, and present who verified/dismissed it.
 
 ### Day 6: Real-Time Alert Delivery Tracking & Resolution
-- [ ] **Live Blast Progress Bar:**
+- [x] **Live Blast Progress Bar:**
   - Multi-state segmented progress bar showing Queued, Sending, Sent, Delivered, and Failed counts in real time.
-- [ ] **Alerts Table View (`GET /incidents/:id/alerts`):**
+- [x] **Alerts Table View (`GET /incidents/:id/alerts`):**
   - Paginated table displaying recipient role, masked phone, language, SMS status, attempt count, and provider timestamp.
   - Status filters (All, Sent, Delivered, Failed).
-- [ ] **Manual Retry Trigger:**
+- [x] **Manual Retry Trigger:**
   - "Retry Failed Alerts" button for Security/Admin with confirmation modal.
-- [ ] **Incident Resolution Flow (`POST /incidents/:id/resolve`):**
+- [x] **Incident Resolution Flow (`POST /incidents/:id/resolve`):**
   - Resolution modal with optional "Send All-Clear alert to residents" toggle.
 
 ### Day 7: User Management, Flexible Registration & Zone Management
-- [ ] **User Directory & Flexible Registration Modal (`/users`):**
+- [x] **User Directory & Flexible Registration Modal (`/admin/users`):**
   - User list with role badge, preferred language, coordinates/address status, and active toggle.
   - Filter by community zone, language, and role.
   - **Dual-Mode Registration Form (Security & Admin):**
@@ -132,26 +132,27 @@
     - **Mode 1 (Zone & Address Based):** Select Home Community Zone, enter House / Compound Number, Street / Quarter / Landmark description (no smartphone GPS required).
     - **Mode 2 (GPS & Map Enhanced):** One-tap device GPS capture button, interactive Leaflet map pin, or zone center shortcut.
   - Soft-deactivate / reactivate toggle.
-- [ ] **Bulk CSV User Import:**
+- [x] **Bulk CSV User Import:**
   - File drag-and-drop CSV uploader supporting both GPS coordinates and Zone + House Number / Area records with default alert opt-in.
   - Row-by-row validation parser previewing valid vs invalid rows before import.
   - All-or-nothing rollback option with downloadable error log.
-- [ ] **Zone Management (`/zones`):**
+- [x] **Zone Management (`/admin/zones`):**
   - Zone list with map markers, center coordinates, radius, and active incident counters.
   - Create / edit zone modal.
-- [ ] **Audit Trail Viewer (`/audit` - Admin Only):**
+- [x] **Audit Trail Viewer (`/admin/audit` - Admin Only):**
   - Chronological append-only timeline of security events (logins, incident reports, verifications, dismissals, retries).
   - Detailed diff inspector showing `before` and `after` JSON snapshots.
 
 ### Day 8: Accessibility, Responsive Polish & End-to-End Demo Verification
-- [ ] **Accessibility (WCAG AA):**
-  - Keyboard focus trapping on all modals.
-  - Aria-live regions for status updates and alert dispatches.
+- [x] **Accessibility (WCAG AA):**
+  - Keyboard focus trapping on all modals (`Tab`/`Shift+Tab`).
+  - ESC key dismiss and body scroll locking.
   - Contrast check for all severity and status color badges.
-- [ ] **Mobile Viewport Optimization:**
+- [x] **Mobile Viewport Optimization:**
   - Responsive audit down to 360px viewport.
   - Touch-friendly tap targets (minimum 44x44px).
-- [ ] **Offline & Disconnection Grace:**
-  - Offline banner notification and automatic retry when network resumes.
-- [ ] **End-to-End Demo Script Walkthrough:**
+- [x] **Offline & Disconnection Grace:**
+  - Offline banner notification and automatic query retry when network resumes.
+- [x] **End-to-End Demo Script Walkthrough:**
   - Officer login → report incident (`INC-000001`) → second officer login → verify preview check → fanout confirmation → delivery tracking.
+

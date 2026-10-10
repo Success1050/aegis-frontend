@@ -3,10 +3,15 @@ export type UserRole = "ADMIN" | "SECURITY" | "RESIDENT";
 export type Language = "ENGLISH" | "HAUSA" | "IGBO" | "YORUBA" | "PIDGIN";
 
 export type IncidentType =
+  | "BANDIT_ATTACK"
+  | "TERRORIST_INCURSION"
+  | "KIDNAPPING_THREAT"
   | "POSSIBLE_INTRUSION"
   | "SUSPICIOUS_PERSON"
   | "SUSPICIOUS_VEHICLE"
   | "FIRE"
+  | "FLOOD_WARNING"
+  | "SEVERE_WEATHER"
   | "OTHER";
 
 export type IncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -79,40 +84,47 @@ export interface AuthResponse {
 
 export interface Incident {
   id: string;
-  incidentNumber: string;
-  title: string;
+  number?: string;
+  incidentNumber?: string;
+  title?: string;
   description: string;
-  incidentType: IncidentType;
+  type?: IncidentType;
+  incidentType?: IncidentType;
   severity: IncidentSeverity;
   status: IncidentStatus;
-  blastRadiusMeters: number;
+  alertRadiusMeters?: number;
+  blastRadiusMeters?: number;
   latitude: number;
   longitude: number;
   zoneId: string | null;
+  zoneName?: string | null;
   reportedById: string;
-  verifiedById: string | null;
-  dismissedById: string | null;
-  resolvedById: string | null;
-  dismissReason: string | null;
-  resolveNotes: string | null;
-  version: number;
-  reportedAt: string;
-  verifiedAt: string | null;
-  dismissedAt: string | null;
-  resolvedAt: string | null;
-  alertsCompletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  reportedByName?: string | null;
+  verifiedById?: string | null;
+  verifiedByName?: string | null;
+  dismissedById?: string | null;
+  dismissedByName?: string | null;
+  resolvedById?: string | null;
+  dismissReason?: string | null;
+  resolveNotes?: string | null;
+  version?: number;
+  reportedAt?: string;
+  verifiedAt?: string | null;
+  dismissedAt?: string | null;
+  resolvedAt?: string | null;
+  alertsCompletedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   reporter?: {
     id: string;
     phone: string;
-    fullName: string | null;
+    fullName?: string | null;
     role: UserRole;
   } | null;
   verifier?: {
     id: string;
     phone: string;
-    fullName: string | null;
+    fullName?: string | null;
     role: UserRole;
   } | null;
   zone?: Zone | null;
@@ -149,34 +161,56 @@ export interface RenderedMessagePreview {
   reviewStatus: "APPROVED" | "NEEDS_NATIVE_REVIEW";
 }
 
+export interface RecipientPreviewSample {
+  name: string;
+  phoneMasked: string;
+  role: string;
+  preferredLanguage: string;
+  matchReason: string;
+  distanceMeters: number | null;
+}
+
+export interface RecipientPreviewBreakdown {
+  byPhysicalRadius: number;
+  byZoneMembership: number;
+  overlapCount: number;
+  byLanguage: Record<string, number>;
+  byRole: Record<string, number>;
+}
+
 export interface RecipientPreviewResult {
-  incidentId: string;
+  incidentId?: string;
   incidentNumber: string;
-  severity: IncidentSeverity;
-  blastRadiusMeters: number;
-  coordinates: {
+  severity?: IncidentSeverity;
+  alertRadiusMeters?: number;
+  blastRadiusMeters?: number;
+  coordinates?: {
     latitude: number;
     longitude: number;
   };
   totalRecipients: number;
-  physicallyNearbyCount: number;
-  communityMemberCount: number;
-  overlapCount: number;
-  roleBreakdown: {
+  breakdown?: RecipientPreviewBreakdown;
+  physicallyNearbyCount?: number;
+  communityMemberCount?: number;
+  overlapCount?: number;
+  roleBreakdown?: {
     residents: number;
     security: number;
   };
-  languageBreakdown: Record<Language, number>;
-  skippedCount: number;
+  languageBreakdown?: Record<string, number>;
+  staleLocationCount?: number;
+  requiresLargeBlastConfirmation?: boolean;
+  sampleRecipients?: RecipientPreviewSample[];
+  skippedCount?: number;
   skippedReasons?: {
     noCoordinatesOrZone?: number;
     alertsDisabled?: number;
     inactiveAccount?: number;
   };
-  estimatedSegments: number;
-  estimatedCostNgn: number;
-  renderedMessages: Record<Language, RenderedMessagePreview>;
-  requiresNativeReviewWarning: boolean;
+  estimatedSegments?: number;
+  estimatedCostNgn?: number;
+  renderedMessages?: Record<string, RenderedMessagePreview>;
+  requiresNativeReviewWarning?: boolean;
 }
 
 export interface ApiErrorResponse {
@@ -193,4 +227,74 @@ export interface PaginatedResult<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface SecurityDashboardStats {
+  pendingReviewCount: number;
+  oldestPendingAgeMinutes: number | null;
+  alertingCount: number;
+  resolvedTodayCount: number;
+  peopleAtRiskCount: number;
+  alertsSentToday: number;
+  failedAlertsToday: number;
+}
+
+export interface AdminDashboardStats {
+  totalUsers: number;
+  usersByRole: {
+    admin: number;
+    security: number;
+    resident: number;
+  };
+  usersByLanguage: Record<string, number>;
+  totalZones: number;
+  incidentsByStatus: Record<string, number>;
+  alertStats: {
+    total: number;
+    queued: number;
+    sending: number;
+    sent: number;
+    delivered: number;
+    failed: number;
+  };
+  hasUnreviewedTemplates: boolean;
+  systemStatus: {
+    queuePaused: boolean;
+    smsProvider: string;
+    database: string;
+  };
+}
+
+export interface ResidentDashboardStats {
+  zoneName: string;
+  alertsEnabled: boolean;
+  preferredLanguage: string;
+  recentCommunityAlerts: Array<{
+    id: string;
+    number: string;
+    type: string;
+    severity: IncidentSeverity;
+    areaName: string;
+    timeWAT: string;
+    status: IncidentStatus;
+  }>;
+}
+
+export interface CircuitBreakerMetrics {
+  state: "CLOSED" | "OPEN" | "HALF_OPEN";
+  failures: number;
+  successes: number;
+  totalRequests: number;
+  consecutiveFailures: number;
+  lastFailureTime?: number;
+  openedAt?: number;
+}
+
+export interface QueueStats {
+  waiting: number;
+  active: number;
+  completed: number;
+  failed: number;
+  delayed: number;
+  paused: boolean;
 }

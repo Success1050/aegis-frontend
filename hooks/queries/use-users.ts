@@ -77,3 +77,88 @@ export function useUpdateUserPreferencesMutation() {
     },
   });
 }
+
+export function useUpdateUserMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      fullName?: string;
+      role?: UserRole;
+      preferredLanguage?: Language;
+      alertsEnabled?: boolean;
+      latitude?: number | null;
+      longitude?: number | null;
+      zoneId?: string | null;
+      houseNumber?: string;
+      areaDescription?: string;
+      isActive?: boolean;
+    }) => {
+      return api.patch<UserProfile>(`/users/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+
+export function useDeactivateUserMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return api.delete<{ success: boolean; message: string }>(`/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+
+export interface BulkImportRowOutcome {
+  row: number;
+  phone: string;
+  success: boolean;
+  userId?: string;
+  error?: string;
+}
+
+export interface BulkImportResponse {
+  totalSubmitted: number;
+  successful: number;
+  failed: number;
+  results: BulkImportRowOutcome[];
+}
+
+export function useBulkImportUsersMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      users: Array<{
+        phone: string;
+        fullName?: string;
+        email?: string;
+        role?: UserRole;
+        preferredLanguage?: Language;
+        alertsEnabled?: boolean;
+        zoneId?: string;
+        houseNumber?: string;
+        areaDescription?: string;
+        latitude?: number;
+        longitude?: number;
+      }>;
+      defaultZoneId?: string;
+      dispatchCredentials?: boolean;
+    }) => {
+      return api.post<BulkImportResponse>("/users/bulk-import", payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}

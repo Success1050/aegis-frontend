@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuth } from "@/context/auth-context";
 import { useUiStore } from "@/stores/ui-store";
 import { ConnectionIndicator } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ import {
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const { sidebarOpen, toggleSidebar } = useUiStore();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
@@ -68,7 +68,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </Link>
           <button
             onClick={toggleSidebar}
-            className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           >
             {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
@@ -100,27 +100,39 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
         {/* User Footer */}
         <div className="p-3 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between gap-2">
-            {sidebarOpen && (
-              <div className="overflow-hidden">
-                <p className="text-xs font-bold truncate">
+          {sidebarOpen ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="overflow-hidden min-w-0 flex-1">
+                <p className="text-xs font-bold truncate text-slate-900 dark:text-slate-100">
                   {user?.name || user?.fullName || "Administrator"}
                 </p>
                 <p className="text-[10px] text-slate-400 truncate">
                   {user?.email || user?.phone}
                 </p>
               </div>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={logout}
-              title="Log Out"
-              className="text-slate-400 hover:text-red-600 shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                title="Log Out"
+                className="text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 shrink-0 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                title="Log Out"
+                className="text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -140,6 +152,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-3">
             <RoleBadge role="ADMIN" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="text-xs text-slate-600 hover:text-red-600 hover:border-red-300 dark:text-slate-300 dark:hover:text-red-400 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
+              Sign Out
+            </Button>
           </div>
         </header>
 

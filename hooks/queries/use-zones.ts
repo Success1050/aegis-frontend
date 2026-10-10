@@ -46,3 +46,27 @@ export function useCreateZoneMutation() {
     },
   });
 }
+
+export function useUpdateZoneMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      name?: string;
+      description?: string;
+      centerLat?: number;
+      centerLng?: number;
+      radiusMeters?: number;
+      isActive?: boolean;
+    }) => {
+      return api.patch<Zone>(`/zones/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: zoneKeys.all });
+    },
+  });
+}

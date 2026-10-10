@@ -214,7 +214,8 @@ export async function apiClient<T = unknown>(
     response.status === 401 &&
     !skipAuth &&
     !endpoint.includes("/auth/login") &&
-    !endpoint.includes("/auth/refresh")
+    !endpoint.includes("/auth/refresh") &&
+    !endpoint.includes("/auth/me")
   ) {
     if (!isRefreshing) {
       isRefreshing = true;
@@ -233,9 +234,20 @@ export async function apiClient<T = unknown>(
         });
         return handleResponse<T>(retryRes, requestId);
       } else {
-        // Redirect to login if in browser
-        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
-          window.location.href = "/login?expired=true";
+        // Broadcast session expiration event so components / modals can respond
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("aegis_session_expired"));
+
+          // Only redirect if user was trying to access a protected operational route
+          const currentPath = window.location.pathname;
+          const isPublicRoute =
+            currentPath === "/" ||
+            currentPath.startsWith("/login") ||
+            currentPath.startsWith("/portal");
+
+          if (!isPublicRoute) {
+            window.location.href = "/login?expired=true";
+          }
         }
       }
     } else {

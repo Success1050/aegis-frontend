@@ -8,6 +8,7 @@ import { Modal, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lock, ShieldAlert } from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -111,14 +112,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       const refreshToken = tokenStorage.getRefreshToken();
-      await api.post("/auth/logout", { refreshToken });
+      await api.post("/auth/logout", { refreshToken }).catch(() => {});
     } catch {
       // Continue even if logout api fails
     } finally {
       tokenStorage.clear();
       setUser(null);
       setSessionExpired(false);
-      router.push("/login");
+      useAuthStore.getState().logout();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
     }
   };
 

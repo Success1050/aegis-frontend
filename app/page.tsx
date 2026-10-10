@@ -11,6 +11,7 @@ import {
   Activity,
   ArrowRight,
   CheckCircle,
+  ShieldCheck,
   Bell,
   Lock,
   Globe2,
@@ -157,9 +158,10 @@ export default function Home() {
 
         {/* Architecture & Guarantees Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 flex items-center justify-center font-bold text-sm dark:bg-red-950/60 dark:text-red-300">
-              4EYES
+          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-3">
+            <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-red-100 text-red-700 font-bold text-xs tracking-wider dark:bg-red-950/80 dark:text-red-300 border border-red-200 dark:border-red-900/60 w-fit">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>4-EYES</span>
             </div>
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
               Four-Eyes Verification
@@ -169,9 +171,10 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm dark:bg-emerald-950/60 dark:text-emerald-300">
-              DUAL
+          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-3">
+            <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-emerald-100 text-emerald-700 font-bold text-xs tracking-wider dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/60 w-fit">
+              <Radio className="w-3.5 h-3.5 shrink-0" />
+              <span>DUAL-PILLAR</span>
             </div>
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
               Dual-Pillar Targeting
@@ -181,9 +184,10 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm dark:bg-blue-950/60 dark:text-blue-300">
-              5LANG
+          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-3">
+            <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-blue-100 text-blue-700 font-bold text-xs tracking-wider dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 w-fit">
+              <Globe2 className="w-3.5 h-3.5 shrink-0" />
+              <span>5-LANGUAGES</span>
             </div>
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
               Multilingual SMS
@@ -193,9 +197,10 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-2">
-            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-sm dark:bg-purple-950/60 dark:text-purple-300">
-              IDEMP
+          <div className="p-5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 space-y-3">
+            <div className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-purple-100 text-purple-700 font-bold text-xs tracking-wider dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-900/60 w-fit">
+              <Lock className="w-3.5 h-3.5 shrink-0" />
+              <span>IDEMPOTENT</span>
             </div>
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
               Idempotency Engine

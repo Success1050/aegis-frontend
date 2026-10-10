@@ -4,10 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { useIncidentsQuery, useIncidentDetailQuery, useVerifyIncidentMutation, useDismissIncidentMutation } from "@/hooks/queries/use-incidents";
 import { useRecipientPreviewQuery } from "@/hooks/queries/use-incidents";
+import { useSecurityDashboardQuery } from "@/hooks/queries/use-dashboard";
+import { useRealtime } from "@/hooks/use-realtime";
 import { useIncidentStore } from "@/stores/incident-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { IncidentCard } from "@/components/incidents/incident-card";
 import { IncidentFiltersBar } from "@/components/incidents/incident-filters-bar";
+import { SystemStatusBanner } from "@/components/dashboard/system-status-banner";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Modal, ModalFooter } from "@/components/ui/modal";
@@ -28,11 +31,18 @@ import {
   ExternalLink,
   MessageSquare,
   Sparkles,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 
 export function OfficerDashboardClient() {
   const toast = useToast();
   const { user } = useAuthStore();
+  const { isConnected, audioAlertsEnabled, toggleAudioAlerts } = useRealtime();
+  const { data: securityStats } = useSecurityDashboardQuery();
+
   const {
     filters,
     verificationModalIncidentId,
@@ -58,11 +68,12 @@ export function OfficerDashboardClient() {
     !!verificationModalIncidentId
   );
 
-  // Compute operational metric counts
-  const pendingCount = incidents.filter((i) => i.status === "PENDING_REVIEW").length;
-  const alertingCount = incidents.filter((i) => i.status === "ALERTING").length;
-  const sentTodayCount = incidents.filter((i) => i.status === "ALERTS_SENT").length;
-  const resolvedCount = incidents.filter((i) => i.status === "RESOLVED").length;
+  // Compute operational metric counts from backend dashboard query or list fallback
+  const pendingCount = securityStats?.pendingReviewCount ?? incidents.filter((i) => i.status === "PENDING_REVIEW").length;
+  const alertingCount = securityStats?.alertingCount ?? incidents.filter((i) => i.status === "ALERTING").length;
+  const peopleAtRisk = securityStats?.peopleAtRiskCount ?? 0;
+  const resolvedCount = securityStats?.resolvedTodayCount ?? incidents.filter((i) => i.status === "RESOLVED").length;
+  const oldestPendingAge = securityStats?.oldestPendingAgeMinutes;
 
   const handleConfirmVerification = async () => {
     if (!verificationModalIncidentId) return;
@@ -103,63 +114,120 @@ export function OfficerDashboardClient() {
 
   return (
     <div className="space-y-6">
+      {/* System Warning Banner for Paused Queues or Circuit Breaker Trip */}
+      <SystemStatusBanner />
+
       {/* Top Banner & Quick Trigger */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-950 p-5 rounded-2xl border border-slate-800">
         <div>
-          <h1 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-            <span>Tactical Command Feed</span>
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping inline-block" />
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              <span>Tactical Command Feed</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping inline-block" />
+            </h1>
+            <span
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${
+                isConnected
+                  ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
+                  : "bg-slate-800 text-slate-400 border border-slate-700"
+              }`}
+            >
+              {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {isConnected ? "LIVE FEED ACTIVE" : "CONNECTING..."}
+            </span>
+          </div>
           <p className="text-xs text-slate-400 mt-1">
-            Real-time emergency monitoring • High-contrast officer console
+            Real-time emergency monitoring • High-contrast officer console • 10s auto-refresh
           </p>
         </div>
 
-        <Link href="/incidents/new">
-          <Button className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs gap-2">
-            <PlusCircle className="w-4 h-4" />
-            REPORT NEW INCIDENT
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleAudioAlerts}
+            className="text-xs bg-slate-900 border-slate-700 hover:bg-slate-800 text-slate-300 gap-1.5"
+            title={audioAlertsEnabled ? "Audio chimes active" : "Audio chimes muted"}
+          >
+            {audioAlertsEnabled ? (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Audio On</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-slate-500" />
+                <span>Audio Muted</span>
+              </>
+            )}
           </Button>
-        </Link>
+
+          <Link href="/incidents/new">
+            <Button className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs gap-2 shadow-lg shadow-red-950">
+              <PlusCircle className="w-4 h-4" />
+              REPORT NEW INCIDENT
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Operational Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Pending Review */}
-        <div className="p-4 rounded-xl border border-amber-900/60 bg-amber-950/30 space-y-1">
+        {/* Pending Review with Age Badge and Pulse */}
+        <div className={`p-4 rounded-xl border space-y-1 transition-all ${
+          pendingCount > 0
+            ? "border-amber-600 bg-amber-950/40 ring-1 ring-amber-500/30"
+            : "border-slate-800 bg-slate-950/40"
+        }`}>
           <div className="flex items-center justify-between text-amber-400 text-xs font-semibold">
-            <span>PENDING REVIEW</span>
-            <Clock className="w-4 h-4" />
+            <span className="flex items-center gap-1.5">
+              <span>PENDING REVIEW</span>
+              {pendingCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
+              )}
+            </span>
+            <Clock className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-3xl font-extrabold text-amber-200">{pendingCount}</div>
+          <div className="flex items-baseline justify-between">
+            <div className="text-3xl font-extrabold text-amber-200">{pendingCount}</div>
+            {oldestPendingAge !== null && oldestPendingAge !== undefined && pendingCount > 0 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono animate-pulse">
+                Oldest: {oldestPendingAge}m
+              </span>
+            )}
+          </div>
           <p className="text-[11px] text-amber-400/80">Requires second officer verify</p>
         </div>
 
         {/* Active Blast / Alerting */}
-        <div className="p-4 rounded-xl border border-purple-900/60 bg-purple-950/30 space-y-1">
+        <div className={`p-4 rounded-xl border space-y-1 transition-all ${
+          alertingCount > 0
+            ? "border-purple-600 bg-purple-950/40 ring-1 ring-purple-500/30"
+            : "border-slate-800 bg-slate-950/40"
+        }`}>
           <div className="flex items-center justify-between text-purple-400 text-xs font-semibold">
             <span>ACTIVE ALERTING</span>
-            <Radio className="w-4 h-4" />
+            <Radio className="w-4 h-4 text-purple-400" />
           </div>
           <div className="text-3xl font-extrabold text-purple-200">{alertingCount}</div>
           <p className="text-[11px] text-purple-400/80">BullMQ SMS dispatch in progress</p>
         </div>
 
-        {/* Alerts Sent Today */}
-        <div className="p-4 rounded-xl border border-emerald-900/60 bg-emerald-950/30 space-y-1">
-          <div className="flex items-center justify-between text-emerald-400 text-xs font-semibold">
-            <span>ALERTS BROADCAST</span>
-            <CheckCircle2 className="w-4 h-4" />
+        {/* People at Risk Count */}
+        <div className="p-4 rounded-xl border border-blue-900/60 bg-blue-950/30 space-y-1">
+          <div className="flex items-center justify-between text-blue-400 text-xs font-semibold">
+            <span>PEOPLE AT RISK</span>
+            <Users className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-3xl font-extrabold text-emerald-200">{sentTodayCount}</div>
-          <p className="text-[11px] text-emerald-400/80">Community alerted successfully</p>
+          <div className="text-3xl font-extrabold text-blue-200">{peopleAtRisk}</div>
+          <p className="text-[11px] text-blue-400/80">Estimated blast zone population</p>
         </div>
 
-        {/* Resolved */}
+        {/* Resolved Today */}
         <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/50 space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>RESOLVED</span>
-            <ShieldCheck className="w-4 h-4" />
+            <span>RESOLVED TODAY</span>
+            <ShieldCheck className="w-4 h-4 text-slate-400" />
           </div>
           <div className="text-3xl font-extrabold text-slate-200">{resolvedCount}</div>
           <p className="text-[11px] text-slate-400">All-clear issued or resolved</p>
@@ -223,13 +291,13 @@ export function OfficerDashboardClient() {
               <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40">
                 <p className="text-xs text-blue-600 dark:text-blue-400">Physical GPS Nearby</p>
                 <p className="text-2xl font-black text-blue-700 dark:text-blue-300">
-                  {previewData.physicallyNearbyCount}
+                  {previewData.breakdown?.byPhysicalRadius ?? previewData.physicallyNearbyCount ?? 0}
                 </p>
               </div>
               <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40">
                 <p className="text-xs text-purple-600 dark:text-purple-400">Zone Members</p>
                 <p className="text-2xl font-black text-purple-700 dark:text-purple-300">
-                  {previewData.communityMemberCount}
+                  {previewData.breakdown?.byZoneMembership ?? previewData.communityMemberCount ?? 0}
                 </p>
               </div>
             </div>
@@ -240,7 +308,7 @@ export function OfficerDashboardClient() {
                 Multilingual SMS Distribution
               </p>
               <div className="flex flex-wrap gap-2 text-xs">
-                {Object.entries(previewData.languageBreakdown).map(([lang, count]) => (
+                {Object.entries(previewData.breakdown?.byLanguage || previewData.languageBreakdown || {}).map(([lang, count]) => (
                   <span
                     key={lang}
                     className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-slate-700 dark:text-slate-300"
@@ -255,10 +323,10 @@ export function OfficerDashboardClient() {
             <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs">
               <div>
                 <p className="font-semibold text-emerald-900 dark:text-emerald-200">
-                  Estimated SMS Segments: {previewData.estimatedSegments}
+                  Estimated SMS Segments: {previewData.estimatedSegments ?? previewData.totalRecipients}
                 </p>
                 <p className="text-emerald-700 dark:text-emerald-400">
-                  Forecast Cost: ₦{previewData.estimatedCostNgn.toLocaleString()} NGN
+                  Forecast Cost: ₦{(previewData.estimatedCostNgn ?? previewData.totalRecipients * 4).toLocaleString()} NGN
                 </p>
               </div>
               <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-200 dark:bg-emerald-900 font-bold text-emerald-900 dark:text-emerald-100">

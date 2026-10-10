@@ -4,13 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { Shield, Home, Bell, Settings, LogOut } from "lucide-react";
 
 export function ResidentShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
 
   const navLinks = [
     { href: "/portal", label: "Community Status", icon: Home },

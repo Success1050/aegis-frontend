@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuth } from "@/context/auth-context";
 import { ConnectionIndicator, AudioChimeToggle } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { RoleBadge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ import {
 
 export function OfficerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Initialize realtime listener & audio cue hooks
